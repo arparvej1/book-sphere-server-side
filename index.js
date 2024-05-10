@@ -73,6 +73,14 @@ async function run() {
       res.send(result);
     });
 
+    // --- delete book from client
+    app.delete('/book/:bookId', async (req, res) => {
+      const id = req.params.bookId;
+      const query = { _id: new ObjectId(id) }
+      const result = await bookCollection.deleteOne(query);
+      res.send(result);
+    });
+
 
 
     const categoryCollection = client.db('bookSphereDB').collection('category');
