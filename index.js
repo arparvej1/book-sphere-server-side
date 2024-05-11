@@ -50,7 +50,7 @@ async function run() {
 
 
     const librarianCollection = client.db('bookSphereDB').collection('librarian');
-    
+
     // --- send user
     app.get('/librarians', async (req, res) => {
       const cursor = librarianCollection.find();
@@ -58,13 +58,6 @@ async function run() {
       res.send(result);
     });
 
-    // // --- send user
-    // app.get('/librarians/:userUid', async (req, res) => {
-    //   const id = req.params.userUid;
-    //   const query = { userUid: new ObjectId(id) }
-    //   const result = await librarianCollection.findOne(query);
-    //   res.send(result);
-    // });
 
     const bookCollection = client.db('bookSphereDB').collection('books');
 
@@ -118,6 +111,24 @@ async function run() {
         }
       }
       const result = await bookCollection.updateOne(filter, book, options);
+      res.send(result);
+    });
+
+
+    const borrowCollection = client.db('bookSphereDB').collection('borrow');
+
+    // --- send user
+    app.get('/borrow', async (req, res) => {
+      const cursor = borrowCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // --- received user from client
+    app.post('/borrow', async (req, res) => {
+      const borrow = req.body;
+      console.log(borrow);
+      const result = await borrowCollection.insertOne(borrow);
       res.send(result);
     });
 
