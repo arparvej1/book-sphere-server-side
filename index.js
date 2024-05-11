@@ -50,7 +50,7 @@ async function run() {
 
 
     const bookCollection = client.db('bookSphereDB').collection('books');
-    
+
     // --- send books
     app.get('/books', async (req, res) => {
       const cursor = bookCollection.find();
@@ -81,6 +81,28 @@ async function run() {
       res.send(result);
     });
 
+    // Update book
+    app.put('/book/:bookId', async (req, res) => {
+      const id = req.params.bookId;
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+      const updatedBook = req.body;
+
+      const book = {
+        $set: {
+          name: updatedBook.name,
+          category: updatedBook.category,
+          quantity: updatedBook.quantity,
+          author: updatedBook.author,
+          rating: updatedBook.rating,
+          image: updatedBook.image,
+          contents: updatedBook.contents,
+          shortDescription: updatedBook.shortDescription
+        }
+      }
+      const result = await bookCollection.updateOne(filter, book, options);
+      res.send(result);
+    });
 
 
     const categoryCollection = client.db('bookSphereDB').collection('category');
@@ -110,11 +132,11 @@ async function run() {
 run().catch(console.dir);
 
 // --- run server
-app.get('/',  (req, res) => {
+app.get('/', (req, res) => {
   res.send('Server is running...')
 });
 
-app.listen(port, ()=>{
+app.listen(port, () => {
   console.log(`Server is running port: ${port}
   Link: http://localhost:${port}`);
 });
