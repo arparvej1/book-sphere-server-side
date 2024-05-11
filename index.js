@@ -49,6 +49,23 @@ async function run() {
     });
 
 
+    const librarianCollection = client.db('bookSphereDB').collection('librarian');
+    
+    // --- send user
+    app.get('/librarians', async (req, res) => {
+      const cursor = librarianCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // // --- send user
+    // app.get('/librarians/:userUid', async (req, res) => {
+    //   const id = req.params.userUid;
+    //   const query = { userUid: new ObjectId(id) }
+    //   const result = await librarianCollection.findOne(query);
+    //   res.send(result);
+    // });
+
     const bookCollection = client.db('bookSphereDB').collection('books');
 
     // --- send books
