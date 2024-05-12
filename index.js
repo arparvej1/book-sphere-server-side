@@ -132,6 +132,14 @@ async function run() {
       res.send(result);
     });
 
+    // --- delete borrow from client
+    app.delete('/borrow/:borrowId', async (req, res) => {
+      const id = req.params.borrowId;
+      const query = { _id: new ObjectId(id) }
+      const result = await borrowCollection.deleteOne(query);
+      res.send(result);
+    });
+
 
     const categoryCollection = client.db('bookSphereDB').collection('category');
 
