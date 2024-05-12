@@ -91,7 +91,7 @@ async function run() {
       res.send(result);
     });
 
-    // Update book
+    // Update book - put
     app.put('/book/:bookId', async (req, res) => {
       const id = req.params.bookId;
       const filter = { _id: new ObjectId(id) }
@@ -111,6 +111,21 @@ async function run() {
         }
       }
       const result = await bookCollection.updateOne(filter, book, options);
+      res.send(result);
+    });
+
+    // Update book - patch
+    app.patch('/book/:bookId', async (req, res) => {
+      const id = req.params.bookId;
+      const filter = { _id: new ObjectId(id) }
+      const updatedBook = req.body;
+
+      const book = {
+        $set: {
+          quantity: updatedBook.quantity
+        }
+      }
+      const result = await bookCollection.updateOne(filter, book);
       res.send(result);
     });
 
