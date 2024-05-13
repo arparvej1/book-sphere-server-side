@@ -1,25 +1,41 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-const corsConfig = {
-  origin: [
-    'http://localhost:5173',
-    'https://my-book-sphere.web.app'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE']
-}
-app.use(cors(corsConfig))
-app.options("", cors(corsConfig))
+
+// const corsConfig = {
+//   origin: [
+//     'http://localhost:5173',
+//     'https://my-book-sphere.web.app',
+//     'https://my-book-sphere.firebaseapp.com'
+//   ],
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE']
+// }
+// app.use(cors(corsConfig));
+// app.options("", cors(corsConfig));
 
 // middleware
-app.use(cors());
+// app.use(cors());
+// app.use(express.json());
+// app.use(cookieParser());
+
+// middleware
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://my-book-sphere.web.app',
+    'https://my-book-sphere.firebaseapp.com'
+  ],
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.MONGODB_ELEVEN_USER}:${process.env.MONGODB_ELEVEN_PASS}@cluster0.esbrpdb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -32,21 +48,51 @@ const client = new MongoClient(uri, {
   }
 });
 
+
+//localhost:5000 and localhost:5173 are treated as same site.  so sameSite value must be strict in development server.  in production sameSite will be none
+// in development server secure will false .  in production secure will be true
+const cookieOptions = {
+  httpOnly: true,
+  // secure: process.env.NODE_ENV === "production",
+  secure: true,
+  sameSite: 'none'
+  // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+};
+
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: 'not authorized' })
+  }
+  jwt.verify(token, process.env.JWT_ACCESS_TOKEN_SECRET, (err, decoded) => {
+    // ------ error
+    if (err) {
+      return res.status(401).send({ message: 'this is not authorized' })
+    }
+    // ----- if token is valid then it would be decoded
+    console.log('value in the token', decoded)
+    req.user = decoded;
+    next()
+  })
+}
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
 
-    // ---- auth related api
+    //creating Token
+    // app.post("/jwt", logger, async (req, res) => {
+    //   const user = req.body;
+    //   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+    //   res.cookie("token", token, cookieOptions).send({ success: true });
+    // });
+
+    //--------- creating Token
     app.post('/jwt', async (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, process.env.JWT_ACCESS_TOKEN_SECRET, { expiresIn: '5h' })
-      res
-        .cookie('token', token, {
-          httpOnly: true,
-          secure: false,
-          sameSite: 'none'
-        })
-        .send({ success: true })
+      const token = jwt.sign(user, process.env.JWT_ACCESS_TOKEN_SECRET, { expiresIn: '5h' });
+
+      res.cookie('token', token, cookieOptions).send({ success: true })
     })
 
 
@@ -81,7 +127,12 @@ async function run() {
     const bookCollection = client.db('bookSphereDB').collection('books');
 
     // --- send books
-    app.get('/books', async (req, res) => {
+    app.get('/books', verifyToken, async (req, res) => {
+      console.log(req.query);
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email }
+      }
       const cursor = bookCollection.find();
       const result = await cursor.toArray();
       res.send(result);
