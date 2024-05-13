@@ -22,8 +22,6 @@ const port = process.env.PORT || 5000;
 
 // middleware
 // app.use(cors());
-// app.use(express.json());
-// app.use(cookieParser());
 
 // middleware
 app.use(cors({
@@ -53,10 +51,8 @@ const client = new MongoClient(uri, {
 // in development server secure will false .  in production secure will be true
 const cookieOptions = {
   httpOnly: true,
-  // secure: process.env.NODE_ENV === "production",
-  secure: true,
-  sameSite: 'none'
-  // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
 };
 
 const verifyToken = async (req, res, next) => {
@@ -79,13 +75,6 @@ const verifyToken = async (req, res, next) => {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-
-    //creating Token
-    // app.post("/jwt", logger, async (req, res) => {
-    //   const user = req.body;
-    //   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
-    //   res.cookie("token", token, cookieOptions).send({ success: true });
-    // });
 
     //--------- creating Token
     app.post('/jwt', async (req, res) => {
@@ -127,12 +116,7 @@ async function run() {
     const bookCollection = client.db('bookSphereDB').collection('books');
 
     // --- send books
-    app.get('/books', verifyToken, async (req, res) => {
-      console.log(req.query);
-      let query = {};
-      if (req.query?.email) {
-        query = { email: req.query.email }
-      }
+    app.get('/books', async (req, res) => {
       const cursor = bookCollection.find();
       const result = await cursor.toArray();
       res.send(result);
@@ -204,6 +188,11 @@ async function run() {
 
     // --- send user
     app.get('/borrow', async (req, res) => {
+      // console.log(req.query);
+      // let query = {};
+      // if (req.query?.email) {
+      //   query = { borrowEmail: req.query.email }
+      // }
       const cursor = borrowCollection.find();
       const result = await cursor.toArray();
       res.send(result);
