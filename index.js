@@ -232,6 +232,17 @@ async function run() {
       res.send(result);
     });
 
+
+    const subscriberCollection = client.db('bookSphereDB').collection('subscriber');
+
+    // --- received user from client
+    app.post('/subscriber', async (req, res) => {
+      const subscriber = req.body;
+      console.log(subscriber);
+      const result = await subscriberCollection.insertOne(subscriber);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
