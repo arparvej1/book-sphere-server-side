@@ -122,6 +122,41 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/booksLimit', async (req, res) => {
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      const filterQty = parseInt(req.query?.filterQty);
+      console.log('filterQty', filterQty);
+      let filter = 0;
+      if (filterQty >= 1) {
+        filter = filterQty === 1 ? { quantity: { $gte: 1 } } : { quantity: { $gte: 0 } };
+      } else {
+        filter = { quantity: { $lte: 1 } };
+      }
+
+      console.log('pagination query', page, size);
+      const result = await bookCollection.find(filter)
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      res.send(result);
+    })
+
+    app.get('/booksCount', async (req, res) => {
+      const filterQty = parseInt(req.query?.filterQty);
+      console.log(filterQty);
+      let filter = 0;
+      if (filterQty >= 1) {
+        filter = filterQty === 1 ? { quantity: { $gte: 1 } } : { quantity: { $gte: 0 } };
+      } else {
+        filter = { quantity: { $lte: 1 } };
+      }
+      // const count = bookCollection.estimatedDocumentCount();
+      const result = await bookCollection.find(filter).toArray();
+      const count = result.length;
+      res.send({ count });
+    })
+
     app.get('/book/:bookId', async (req, res) => {
       const id = req.params.bookId;
       const query = { _id: new ObjectId(id) }
