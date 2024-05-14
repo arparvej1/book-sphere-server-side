@@ -154,7 +154,7 @@ async function run() {
       if (filterQty >= 1) {
         filter = filterQty === 1 ? { quantity: { $gte: 1 } } : { quantity: { $gte: 0 } };
       } else {
-        filter = { quantity: { $lte: 1 } };
+        filter = { quantity: { $lte: 0 } };
       }
 
       console.log('pagination query', page, size);
