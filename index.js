@@ -278,6 +278,15 @@ async function run() {
       res.send(result);
     });
 
+    // --- newSubscriber check
+    app.get('/checkSubscriber', async (req, res) => {
+      const newSubscriber = req.query.email;
+      let filter = { subscribeEmail: newSubscriber };
+      const result = await subscriberCollection.find(filter).toArray();
+      const subscribed = result.length ? true : false;
+      res.send({ subscribed });
+    });
+
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
