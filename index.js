@@ -51,12 +51,15 @@ const client = new MongoClient(uri, {
 // in development server secure will false .  in production secure will be true
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
+  secure: true,
+  // secure: process.env.NODE_ENV === "production",
+  // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
+  sameSite: "none"
 };
 
 const verifyToken = async (req, res, next) => {
-  const token = req.cookies?.token;
+  const token = req?.cookies?.token;
+  console.log("token 1", token);
   if (!token) {
     return res.status(401).send({ message: 'not authorized' })
   }
@@ -84,6 +87,11 @@ async function run() {
       res.cookie('token', token, cookieOptions).send({ success: true })
     })
 
+    app.post('/logout', async (req, res) => {
+      const user = req.body;
+      console.log('logging out', user);
+      res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+    })
 
     const userCollection = client.db('bookSphereDB').collection('users');
 
@@ -222,14 +230,18 @@ async function run() {
     const borrowCollection = client.db('bookSphereDB').collection('borrow');
 
     // --- send user
-    app.get('/borrow', async (req, res) => {
-      // console.log(req.query);
-      // let query = {};
-      // if (req.query?.email) {
-      //   query = { borrowEmail: req.query.email }
-      // }
-      const cursor = borrowCollection.find();
-      const result = await cursor.toArray();
+    app.get('/borrow', verifyToken, async (req, res) => {
+      console.log(req.query.email);
+      console.log(req.user.email);
+      console.log('cookies', req.cookies);
+      if (req.user.email !== req.query.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      let filter = {};
+      if (req.query?.email) {
+        filter = { borrowEmail: req.query.email }
+      }
+      const result = await borrowCollection.find(filter).toArray();
       res.send(result);
     });
 
