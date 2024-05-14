@@ -96,9 +96,24 @@ async function run() {
     const userCollection = client.db('bookSphereDB').collection('users');
 
     // --- send user
-    app.get('/users', async (req, res) => {
-      const cursor = userCollection.find();
-      const result = await cursor.toArray();
+    // app.get('/users', async (req, res) => {
+    //   const cursor = userCollection.find();
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
+
+    app.get('/users', verifyToken, async (req, res) => {
+      // console.log(req.query.email);
+      // console.log(req.user.email);
+      // console.log('cookies', req.cookies);
+      if (req.user.email !== req.query.email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      let filter = {};
+      if (req.query?.email) {
+        filter = { email: req.query.email }
+      }
+      const result = await userCollection.find(filter).toArray();
       res.send(result);
     });
 
@@ -113,14 +128,14 @@ async function run() {
 
     const librarianCollection = client.db('bookSphereDB').collection('librarian');
 
-    // --- send user
+    // --- send librarians
     app.get('/librarians', async (req, res) => {
       const cursor = librarianCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
-
+    
     const bookCollection = client.db('bookSphereDB').collection('books');
 
     // --- send books
@@ -229,11 +244,11 @@ async function run() {
 
     const borrowCollection = client.db('bookSphereDB').collection('borrow');
 
-    // --- send user
+    // --- send borrow
     app.get('/borrow', verifyToken, async (req, res) => {
-      console.log(req.query.email);
-      console.log(req.user.email);
-      console.log('cookies', req.cookies);
+      // console.log(req.query.email);
+      // console.log(req.user.email);
+      // console.log('cookies', req.cookies);
       if (req.user.email !== req.query.email) {
         return res.status(403).send({ message: 'forbidden access' })
       }
