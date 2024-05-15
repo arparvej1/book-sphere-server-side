@@ -295,6 +295,16 @@ async function run() {
     });
 
 
+    const reviewCollection = client.db('bookSphereDB').collection('review');
+
+    // --- send review
+    app.get('/review', async (req, res) => {
+      const cursor = reviewCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+
     const subscriberCollection = client.db('bookSphereDB').collection('subscriber');
 
     // --- received user from client
